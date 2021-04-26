@@ -14,8 +14,6 @@ library(testthat)
 library(jpeg)
 source("credentials.R", encoding = "utf-8")
 
-#test
-
 # Afin de ne pas exposer de secrets sur githubs, les identifiants de connexion
 # sont stockés dans un fichier séparé, nommé 'credentials.r'. 
 # Exemple de contenu :
