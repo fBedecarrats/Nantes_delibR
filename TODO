@@ -1,0 +1,2 @@
+TO DO
+- Replace cascading `if /`else if` by 'case when' (just for eye comfort)

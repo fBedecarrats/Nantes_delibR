@@ -225,6 +225,8 @@ server <- function(input, output) {
                                                     "/Documents/")
                         url_extdelibmaj <- str_replace(url_delibmaj, ".pdf", 
                                                        ".PDF")
+                        url_nozero <- str_replace(url_test, "ocuments/0", 
+                                                  "ocuments/")
                         # On teste les alternatives générées
                         if (gets_pdf(url_extmaj)) {
                             out$data$`URL de la délibération`[i] <- url_extmaj
@@ -235,9 +237,12 @@ server <- function(input, output) {
                             } else if (gets_pdf(url_delibmaj)) {
                                     out$data$`URL de la délibération`[i] <- url_delibmaj
                                     out$data$`URL OK`[i] = TRUE
-                                    } else {
-                            out$data$`URL de la délibération`[i] <- url_test
-                            out$data$`URL OK`[i] = FALSE
+                                    } else if (gets_pdf(url_nozero)) {
+                                      out$data$`URL de la délibération`[i] <- url_nozero
+                                      out$data$`URL OK`[i] = TRUE
+                                      } else {
+                                        out$data$`URL de la délibération`[i] <- url_test
+                                        out$data$`URL OK`[i] = FALSE
                         }
                     }
                 }
