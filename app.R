@@ -104,6 +104,16 @@ guess_instance <- function(x) {
     return(instance)
 }
 
+clean_logo_VdN <- function(x) {
+  x <- str_replace(x, "(^|\n)( \n(\n)?)?v?(V|v|Y)(I|i).*\n(\n)?.*(N|W)( ?)an?.*\n", 
+                    "Ville de Nantes")
+  x <- str_replace(x, "^VILLE DE(\n\n)?.{1,9}es.?", "Ville de Nantes")
+  x <- str_replace(x, "^Nan.{1,9}es.?", "Ville de Nantes")
+  x <- str_replace(x, "^nt (D|B)(E|É)(\n\nN?Nant ?es)?", 
+                    "Ville de Nantes")
+  return(x)
+}
+
 # Une série d'options pour le rendu en français
 # Tiré de victorp sur https://stackoverflow.com/questions/54181350
 fr <- list(
@@ -373,7 +383,7 @@ server <- function(input, output) {
                 readLines() %>%
                 str_detect("tesseract-ocr-fra") %>%
                 any()
-            lang <- ifelse(Sys.info()["sysname"] == "Linux" & !fr_in_git, 
+            lang <- ifelse(Sys.info()["sysname"] == "Linux", # & !fr_in_git, # cf. https://github.com/rstudio/shinyapps-package-dependencies/issues/295
                            "eng", "fra")
             engine <- tesseract(language = lang,
                                 options = list(tessedit_pageseg_mode = "1"))
@@ -388,17 +398,21 @@ server <- function(input, output) {
                                               detail = paste0("Page 1/", np), {
                                                   for (j in 1:np) {
                                                       image <- pdf_render_page(pdf = pdf, page = j, dpi = 300)
-                                                      txtout[j] <- ocr(writeJPEG(image), engine = engine)
+                                                      t <- ocr(writeJPEG(image), engine = engine)
+                                                      t <- ifelse(out$instance == "conseil-municipal", 
+                                                                  clean_logo_VdN(t), t)
+                                                      txtout[j] <- t
                                                       incProgress(1/np, detail = paste0("Page ",j+1,"/",np))
                                                   }
                                               })
                                  out$data$txt[i] = paste(txtout, collapse = "\n")
                                  incProgress(1/n, detail = paste0("Délibération ",i+1,"/",n))
                                  out$data <- out$data %>%
-                                 mutate(txt = str_replace(txt, "\n[:alpha:] Direction", "\nDirection"),
-                                        txt = str_replace(txt, "^(V|v)(I|i).*\n(\n?).*Nan.*\n", 
-                                                          "Ville de Nantes"),
-                                        txt = str_remove_all(txt, "Accusé de réception en préfecture\n.*\n"),
+                                 mutate(txt = str_replace(txt, "(\n|^). Direction", "\nDirection"),
+                                        txt = str_replace(txt, "(\n|^). Secrétariat", "\nSecrétariat"),
+                                        txt = str_replace_all(txt, "\nDélibération.{1,5}\n",
+                                                             "\nDélibération\n"),
+                                        txt = str_remove_all(txt, "Accusé de réception en préfecture(\n){1,2}.*\n"),
                                         txt = str_remove_all(txt, "Date de télétransmission.*\n"),
                                         txt = str_remove_all(txt, "Date de réception.*\n"))
                              }
