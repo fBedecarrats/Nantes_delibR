@@ -14,7 +14,7 @@ library(testthat)
 library(jpeg)
 source("credentials.R", encoding = "utf-8")
 
-# Afin de ne pas exposer de secrets sur githubs, les identifiants de connexion
+# Afin de ne pas exposer de secrets sur github, les identifiants de connexion
 # sont stockés dans un fichier séparé, nommé 'credentials.r'. 
 # Exemple de contenu :
 # credentials <- data.frame(
@@ -54,6 +54,8 @@ guess_url <- function(x, instance) {
     # suit le consécutif d'une session précédente
     if (first_index > 5) {
         index_delib_num <- index_delib_num - (first_index - 1)
+        
+        
         index_delib <- ifelse(index_delib_num < 10, 
                               paste0("0", index_delib_num),
                               as.character(index_delib_num))
@@ -111,6 +113,12 @@ clean_logo_VdN <- function(x) {
   x <- str_replace(x, "^Nan.{1,9}es.?", "Ville de Nantes")
   x <- str_replace(x, "^nt (D|B)(E|É)(\n\nN?Nant ?es)?", 
                     "Ville de Nantes")
+  return(x)
+}
+
+clean_logo_NM <- function(x) {
+  x <- str_replace(x, "^.?.?( {0,5})?\n? ? ?\n?\n?.? ?Nantes", "Nantes")
+  x <- str_replace(x, "Nantes\n\nNES ol", "Nantes\nMétropole")
   return(x)
 }
 
@@ -237,22 +245,26 @@ server <- function(input, output) {
                                                        ".PDF")
                         url_nozero <- str_replace(url_test, "ocuments/0", 
                                                   "ocuments/")
+                        url_ano <- str_replace(url_test, ".pdf", "_ANO.pdf")
                         # On teste les alternatives générées
                         if (gets_pdf(url_extmaj)) {
-                            out$data$`URL de la délibération`[i] <- url_extmaj
-                            out$data$`URL OK`[i] = TRUE
-                            } else if (gets_pdf(url_extdelibmaj)) {
-                                out$data$`URL de la délibération`[i] <- url_extdelibmaj
-                                out$data$`URL OK`[i] = TRUE
-                            } else if (gets_pdf(url_delibmaj)) {
-                                    out$data$`URL de la délibération`[i] <- url_delibmaj
-                                    out$data$`URL OK`[i] = TRUE
-                                    } else if (gets_pdf(url_nozero)) {
-                                      out$data$`URL de la délibération`[i] <- url_nozero
-                                      out$data$`URL OK`[i] = TRUE
-                                      } else {
-                                        out$data$`URL de la délibération`[i] <- url_test
-                                        out$data$`URL OK`[i] = FALSE
+                          out$data$`URL de la délibération`[i] <- url_extmaj
+                          out$data$`URL OK`[i] = TRUE
+                        } else if (gets_pdf(url_extdelibmaj)) {
+                          out$data$`URL de la délibération`[i] <- url_extdelibmaj
+                          out$data$`URL OK`[i] = TRUE
+                        } else if (gets_pdf(url_delibmaj)) {
+                          out$data$`URL de la délibération`[i] <- url_delibmaj
+                          out$data$`URL OK`[i] = TRUE
+                        } else if (gets_pdf(url_nozero)) {
+                          out$data$`URL de la délibération`[i] <- url_nozero
+                          out$data$`URL OK`[i] = TRUE
+                        } else if (gets_pdf(url_ano)) {
+                          out$data$`URL de la délibération`[i] <- url_ano
+                          out$data$`URL OK`[i] = TRUE
+                        }else {
+                          out$data$`URL de la délibération`[i] <- url_test
+                          out$data$`URL OK`[i] = FALSE
                         }
                     }
                 }
@@ -361,68 +373,75 @@ server <- function(input, output) {
         out$averif <- TRUE
     })
     
-    observeEvent(input$run_ocr, {
-        if (out$averif) {
-            shinyalert("Attention", 
-                       "Certaines URL n'ont pas été validées ou n'ont pas été 
+    observeEvent(input$run_ocr, { # Quand on clique sur 'Extraire le texte...' 
+      if (out$averif) { # Message si certaines URL ne sont pas valides
+        shinyalert("Attention", 
+                   "Certaines URL n'ont pas été validées ou n'ont pas été 
                        vérifiées après correction. Veuillez corriger toutes les 
                        URL apparaîssant sur des lignes en rouge, puis cliquez 
                        sur 'Tester après modification' pour les valider.", 
-                       type = "error", html = TRUE)
-        } else {
-            shinyalert("Patience", 
-                       "Nous allons maintenant utiliser un réseau de neurones
+                   type = "error", html = TRUE)
+      } else { # Si pas d'URL invalides, lance l'extraction
+        shinyalert("Patience", 
+                   "Nous allons maintenant utiliser un réseau de neurones
                        (LSTM) pour extraire le texte brut des fichiers pdf. Le 
                        traitement prend environ 10 secondes par page. Merci 
                        d'avance pour votre patience.", 
-                       type = "info", html = TRUE)
-            n <- nrow(out$data)
-            out$data$txt <- ""
-            shinyapp_git <- "https://raw.githubusercontent.com/rstudio/shinyapps-package-dependencies/master/packages/tesseract/install"
-            fr_in_git <- shinyapp_git %>%
-                readLines() %>%
-                str_detect("tesseract-ocr-fra") %>%
-                any()
-            lang <- ifelse(Sys.info()["sysname"] == "Linux", # & !fr_in_git, # cf. https://github.com/rstudio/shinyapps-package-dependencies/issues/295
-                           "eng", "fra")
-            engine <- tesseract(language = lang,
-                                options = list(tessedit_pageseg_mode = "1"))
-            withProgress(message = "Extraction du texte", value = 0,
-                         detail = paste0("Délibération 1/", n), {
-                             for (i in 1:n) {
-                                 pdf <- out$data$`URL de la délibération`[i]
-                                 np <- pdf_info(pdf)[["pages"]]
-                                 txtout <- vector(length = np)
-                                 withProgress(message = "Traitement des pages",
-                                              value = 0,
-                                              detail = paste0("Page 1/", np), {
-                                                  for (j in 1:np) {
-                                                      image <- pdf_render_page(pdf = pdf, page = j, dpi = 300)
-                                                      t <- ocr(writeJPEG(image), engine = engine)
-                                                      t <- ifelse(out$instance == "conseil-municipal", 
-                                                                  clean_logo_VdN(t), t)
-                                                      txtout[j] <- t
-                                                      incProgress(1/np, detail = paste0("Page ",j+1,"/",np))
-                                                  }
-                                              })
-                                 out$data$txt[i] = paste(txtout, collapse = "\n")
-                                 incProgress(1/n, detail = paste0("Délibération ",i+1,"/",n))
-                                 out$data <- out$data %>%
-                                 mutate(txt = str_replace(txt, "(\n|^). Direction", "\nDirection"),
-                                        txt = str_replace(txt, "(\n|^). Secrétariat", "\nSecrétariat"),
-                                        txt = str_replace_all(txt, "\nDélibération.{1,5}\n",
-                                                             "\nDélibération\n"),
-                                        txt = str_remove_all(txt, "Accusé de réception en préfecture(\n){1,2}.*\n"),
-                                        txt = str_remove_all(txt, "Date de télétransmission.*\n"),
-                                        txt = str_remove_all(txt, "Date de réception.*\n"))
-                             }
-                         }) 
-            shinyalert("Merci pour votre patience", 
-                       "Le texte brut a été correctement extrait. Vous pouvez
+                   type = "info", html = TRUE)
+        # Paramétrage de l'algo d'extraction (à base de Tesseract)
+        n <- nrow(out$data)
+        out$data$txt <- ""
+        ## Test pour voir si le moteur français avait été ajouté au serveur
+        # shinyapp_git <- "https://raw.githubusercontent.com/rstudio/shinyapps-package-dependencies/master/packages/tesseract/install"
+        # fr_in_git <- shinyapp_git %>%
+        #   readLines() %>%
+        #   str_detect("tesseract-ocr-fra") %>%
+        #   any()
+        lang <- ifelse(Sys.info()["sysname"] == "Linux", # & !fr_in_git, # cf. https://github.com/rstudio/shinyapps-package-dependencies/issues/295
+                       "eng", "fra")
+        # On décommentera quand ce sera prêt sur shinyapps
+        # lang <- "fra"
+        engine <- tesseract(language = lang,
+                            options = list(tessedit_pageseg_mode = "1"))
+        withProgress(message = "Extraction du texte", value = 0,
+                     detail = paste0("Délibération 1/", n), {
+                       for (i in 1:n) {
+                         if (is.na(out$data$`Numéro de l'acte`[i])) { next }
+                         pdf <- out$data$`URL de la délibération`[i]
+                         np <- pdf_info(pdf)[["pages"]]
+                         txtout <- vector(length = np)
+                         withProgress(message = "Traitement des pages",
+                                      value = 0,
+                                      detail = paste0("Page 1/", np), {
+                                        for (j in 1:np) {
+                                          image <- pdf_render_page(pdf = pdf, page = j, dpi = 300)
+                                          t <- ocr(writeJPEG(image), engine = engine)
+                                          t <- ifelse(out$instance == "conseil-municipal", 
+                                                      clean_logo_VdN(t), t)
+                                          t <- ifelse(out$instance == "conseil-metropolitain", 
+                                                      clean_logo_NM(t), t)
+                                          txtout[j] <- t
+                                          incProgress(1/np, detail = paste0("Page ",j+1,"/",np))
+                                        }
+                                      })
+                         out$data$txt[i] = paste(txtout, collapse = "\n")
+                         incProgress(1/n, detail = paste0("Délibération ",i+1,"/",n))
+                         out$data <- out$data %>%
+                           mutate(txt = str_replace(txt, "(\n|^). Direction", "\nDirection"),
+                                  txt = str_replace(txt, "(\n|^). Secrétariat", "\nSecrétariat"),
+                                  txt = str_replace_all(txt, "\nDélibération.{1,5}\n",
+                                                        "\nDélibération\n"),
+                                  txt = str_remove_all(txt, "Accusé de réception en préfecture(\n){1,2}.*\n"),
+                                  txt = str_remove_all(txt, "Date de télétransmission.*\n"),
+                                  txt = str_remove_all(txt, "Date de réception.*\n"))
+                       }
+                     }) 
+        shinyalert("Merci pour votre patience", 
+                   "Le texte brut a été correctement extrait. Vous pouvez
                        maintenant télécharger le fichier enrichi et l'envoyer à
                        l'équipe open data.", 
-                       type = "success", html = TRUE)
-        }
+                   type = "success", html = TRUE)
+      }
     })
     
     
@@ -430,7 +449,7 @@ server <- function(input, output) {
         if (!is.null(out$data)) { # rien n'apparait si aucun fichier sélectionné 
             rendered <- DT::datatable(
                 out$data %>%
-                    select(any_of(c(
+                  select(any_of(c(
                         "Numéro de l'acte",
                         "Objet de l'acte",
                         "URL de la délibération",
