@@ -4,4 +4,7 @@
 .Ruserdata
 .gitignore
 credentials.R
+test/
+delibs/
+rsconnect/
 Nantes_delibR.Rproj
