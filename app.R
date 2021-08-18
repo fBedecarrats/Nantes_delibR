@@ -205,6 +205,10 @@ server <- function(input, output) {
         } else { #si .csv, charge avec la fonction correspondante
             df <- readr::read_csv2(fich_source$datapath[1],
                                    locale = locale(encoding = "WINDOWS-1252"))
+            if (!("Numéro de l'acte" %in% colnames(df))) {
+              df <- readr::read_csv2(fich_source$datapath[1],
+                                     locale = locale(encoding = "UTF-8"))
+            }
         }
         out$data <- df
         out$instance <- guess_instance(out$data)
@@ -246,6 +250,8 @@ server <- function(input, output) {
                         url_nozero <- str_replace(url_test, "ocuments/0", 
                                                   "ocuments/")
                         url_ano <- str_replace(url_test, ".pdf", "_ANO.pdf")
+                        url_space <- str_replace(url_test, "_", "%20")
+                        url_cmdel <- str_replace(url_test, "DEL_DEL", "CM_DEL")
                         # On teste les alternatives générées
                         if (gets_pdf(url_extmaj)) {
                           out$data$`URL de la délibération`[i] <- url_extmaj
@@ -256,11 +262,17 @@ server <- function(input, output) {
                         } else if (gets_pdf(url_delibmaj)) {
                           out$data$`URL de la délibération`[i] <- url_delibmaj
                           out$data$`URL OK`[i] = TRUE
+                        } else if (gets_pdf(url_space)) {
+                          out$data$`URL de la délibération`[i] <- url_space
+                          out$data$`URL OK`[i] = TRUE
                         } else if (gets_pdf(url_nozero)) {
                           out$data$`URL de la délibération`[i] <- url_nozero
                           out$data$`URL OK`[i] = TRUE
                         } else if (gets_pdf(url_ano)) {
                           out$data$`URL de la délibération`[i] <- url_ano
+                          out$data$`URL OK`[i] = TRUE
+                        } else if (gets_pdf(url_cmdel)) {
+                          out$data$`URL de la délibération`[i] <- url_cmdel
                           out$data$`URL OK`[i] = TRUE
                         }else {
                           out$data$`URL de la délibération`[i] <- url_test
@@ -391,17 +403,7 @@ server <- function(input, output) {
         # Paramétrage de l'algo d'extraction (à base de Tesseract)
         n <- nrow(out$data)
         out$data$txt <- ""
-        ## Test pour voir si le moteur français avait été ajouté au serveur
-        # shinyapp_git <- "https://raw.githubusercontent.com/rstudio/shinyapps-package-dependencies/master/packages/tesseract/install"
-        # fr_in_git <- shinyapp_git %>%
-        #   readLines() %>%
-        #   str_detect("tesseract-ocr-fra") %>%
-        #   any()
-        lang <- ifelse(Sys.info()["sysname"] == "Linux", # & !fr_in_git, # cf. https://github.com/rstudio/shinyapps-package-dependencies/issues/295
-                       "eng", "fra")
-        # On décommentera quand ce sera prêt sur shinyapps
-        # lang <- "fra"
-        engine <- tesseract(language = lang,
+        engine <- tesseract(language = "fra",
                             options = list(tessedit_pageseg_mode = "1"))
         withProgress(message = "Extraction du texte", value = 0,
                      detail = paste0("Délibération 1/", n), {
