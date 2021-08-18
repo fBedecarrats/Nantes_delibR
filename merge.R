@@ -26,7 +26,7 @@ str_sub(consolidated$txt, 1, 20) %>%
   str_replace("^.?.?( {0,5})?\n? ? ?\n?\n?.? ?Nantes", "Nantes") %>%
   str_replace("Nantes\n\nNES ol", "Nantes\nMétropole")
 
-folder <- "C:/Users/FBEDECARRA/Desktop/Delibs/CMe_2020_urls"
+folder <- "delibs/02_with_urls"
 files <- list.files(folder, full.names = TRUE)
 consolidated <- map_dfr(files, read_csv, 
                         col_types = cols(.default = col_character()))
@@ -66,8 +66,8 @@ consolidated <- consolidated %>%
          txt = str_remove_all(txt, "Date de télétransmission.*\n"),
          txt = str_remove_all(txt, "Date de réception.*\n"))
 
-save(consolidated, file = paste0(folder, "/consolidated.Rdata"))
+save(consolidated, file = "consolidated.Rdata")
 # load(paste0(folder, "/consolidated.Rdata"))
 write_excel_csv(consolidated, na = "",
-                file = paste0(folder, "/Delibs_Conseil_metropolitain_Nantes_2020.csv"))
+                file = "Delibs_consolidees.csv")
 
