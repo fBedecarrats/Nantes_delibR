@@ -411,6 +411,12 @@ server <- function(input, output) {
                        for (i in 1:n) {
                          if (is.na(out$data$`Numéro de l'acte`[i])) { next }
                          pdf <- out$data$`URL de la délibération`[i]
+                         pdf_txt <- paste(pdf_text(pdf), collapse = "\n")
+                         # Si le doc est déjà OCRisé, on récupère l'OCR déjà dispo
+                         # le tampon de la pref est apposée en numérique (~ 150 caractères. On prend 1000 par sécurité)
+                         if (nchar(pdf_txt) > 1000) { 
+                           out$data$txt[i] <- pdf_txt
+                         } else { 
                          np <- pdf_info(pdf)[["pages"]]
                          txtout <- vector(length = np)
                          withProgress(message = "Traitement des pages",
@@ -428,6 +434,7 @@ server <- function(input, output) {
                                         }
                                       })
                          out$data$txt[i] = paste(txtout, collapse = "\n")
+                         }
                          incProgress(1/n, detail = paste0("Délibération ",i+1,"/",n))
                          out$data <- out$data %>%
                            mutate(txt = str_replace(txt, "(\n|^). Direction", "\nDirection"),
