@@ -23,7 +23,7 @@ source("credentials.R", encoding = "utf-8")
 #     start = c("2021-04-15"), # optinal (all others)
 #     expire = c("2023-04-15"),
 #     admin = c(FALSE),
-#     comment = "Simple and secure authentification mechanism 
+#     comment = "Simple and secure authentication mechanism 
 #   for single ‘Shiny’ applications.",
 #     stringsAsFactors = FALSE
 # )
@@ -488,7 +488,10 @@ server <- function(input, output) {
             paste(fich_upload$name, "_enrichi.csv", sep="")
         },
         content = function(file) {
-            write_excel_csv(out$data, file, na = "")
+          out_table <- out$data %>%
+            mutate(across(starts_with("Date"),
+                          ~ format(dmy(.x), "%d/%m/%Y"))) 
+            write_excel_csv(out_table, file, na = "")
         }
     )
 }
