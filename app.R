@@ -253,6 +253,9 @@ server <- function(input, output) {
                         url_ano <- str_replace(url_test, ".pdf", "_ANO.pdf")
                         url_space <- str_replace(url_test, "_", "%20")
                         url_cmdel <- str_replace(url_test, "DEL_DEL", "CM_DEL")
+                        url_doss <- str_replace(url_test, "/documents/", "/D%C3%A9lib%C3%A9rations/")
+                        url_doss <- str_replace(url_doss, "/assemblees/", "/delib/")
+                        url_doss <-  str_replace(url_doss, ".pdf", ".PDF")
                         # On teste les alternatives générées
                         if (gets_pdf(url_extmaj)) {
                           out$data$`URL de la délibération`[i] <- url_extmaj
@@ -266,7 +269,10 @@ server <- function(input, output) {
                         } else if (gets_pdf(url_space)) {
                           out$data$`URL de la délibération`[i] <- url_space
                           out$data$`URL OK`[i] = TRUE
-                        } else if (gets_pdf(url_nozero)) {
+                        } else if (gets_pdf(url_doss)) {
+                          out$data$`URL de la délibération`[i] <- url_doss
+                          out$data$`URL OK`[i] = TRUE
+                        }else if (gets_pdf(url_nozero)) {
                           out$data$`URL de la délibération`[i] <- url_nozero
                           out$data$`URL OK`[i] = TRUE
                         } else if (gets_pdf(url_ano)) {
