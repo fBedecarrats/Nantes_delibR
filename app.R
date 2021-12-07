@@ -69,7 +69,7 @@ guess_url <- function(x, instance) {
     } else if (instance == "bureau-metropolitain") {
       doc_nom <- paste0(index_delib, "_", delib_an, delib_mois, 
                         delib_jour, "_BNM_DEL.pdf")
-    } else if (instance == "CA du CCAS") {
+    } else if (instance == "ca-ccas") {
       doc_nom <- paste0(index_delib, "_", delib_an, delib_mois, 
                         delib_jour, "_CCAS_DEL.pdf")
     } else { # on n'a encore rien prévu pour le CCAS
