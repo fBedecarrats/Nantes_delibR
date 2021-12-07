@@ -67,14 +67,16 @@ guess_url <- function(x, instance) {
     } else if (instance == "conseil-municipal") {
         doc_nom = paste0(acte, "_DEL.pdf")
     } else if (instance == "bureau-metropolitain") {
-        doc_nom <- paste0(index_delib, "_", delib_an, delib_mois, 
-                          delib_jour, "_BNM_DEL.pdf")
+      doc_nom <- paste0(index_delib, "_", delib_an, delib_mois, 
+                        delib_jour, "_BNM_DEL.pdf")
+    } else if (instance == "CA du CCAS") {
+      doc_nom <- paste0(index_delib, "_", delib_an, delib_mois, 
+                        delib_jour, "_CCAS_DEL.pdf")
     } else { # on n'a encore rien prévu pour le CCAS
-        shinyalert("Attention", 
-                   "L'instance pour laquelle vous essayez de générer des URL 
-                   n'est pas encore prise en compte par cette application", 
-                   type = "error", html = TRUE)
+      print("L'instance pour laquelle vous essayez de générer des URL 
+                   n'est pas encore prise en compte par cette application")
     }
+    
     delib_url_direct <- paste(base_url, instance, delib_an, delib_mois_jour, 
                               docs, doc_nom, sep = "/")
     delib_url_direct <- ifelse(is.na(acte), NA, delib_url_direct)
@@ -88,21 +90,24 @@ gets_pdf <- function(x) {
 
 # Une fonction qui détermine l'instance dont il s'agit
 guess_instance <- function(x) {
-    acte <- x$`Numéro de l'acte`
-    instance <- case_when(
-        str_detect(acte, "CM") ~ "conseil-municipal",
-        str_detect(acte, "DC") ~ "conseil-metropolitain",
-        str_detect(acte, "DB") ~ "bureau-metropolitain")
-    instance <- tibble(instance) %>%
-        count(instance) %>%
-        arrange(desc(n)) %>%
-        summarise(instance = instance[1])
-    instance <- instance[[1]]
-    names(instance) <- ifelse(instance == "conseil-municipal", 
-                             "Conseil municipal", 
-                             ifelse(instance == "conseil-metropolitain",
-                                    "Conseil métropolitain",
-                                    "Bureau métropolitain"))
+  acte <- x$`Numéro de l'acte`
+  instance <- case_when(
+    str_detect(acte, "CM") ~ "conseil-municipal",
+    str_detect(acte, "DC") ~ "conseil-metropolitain",
+    str_detect(acte, "DB") ~ "bureau-metropolitain",
+    str_detect(acte, "DL") ~ "ca-ccas")
+  instance <- tibble(instance) %>%
+    count(instance) %>%
+    arrange(desc(n)) %>%
+    summarise(instance = instance[1])
+  instance <- instance[[1]]
+  names(instance) <- ifelse(instance == "conseil-municipal", 
+                            "Conseil municipal", 
+                            ifelse(instance == "conseil-metropolitain",
+                                   "Conseil métropolitain",
+                                   ifelse(instance == "bureau-metropolitain",
+                                          "Bureau métropolitain",
+                                          "CA du CCAS")))
     return(instance)
 }
 
