@@ -391,9 +391,11 @@ server <- function(input, output) {
     observeEvent(input$fast_cell_edit, {
         info = input$fast_cell_edit
         i = info$row
-        j = info$col + 2 # +2 pcq les rownames sont comptés même si pas affichés
+        j = info$col 
         v = info$value
-        out$data[i, j] <<- isolate(DT::coerceValue(v, out$data[i, j]))
+        # -1 pcq les rownames sont comptés dans l'ui et pas dans l'environnement
+        # en dessous
+        out$data[i, j+1] <<- isolate(DT::coerceValue(v, out$data[i, j]))
         out$averif <- TRUE
     })
     
