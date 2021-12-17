@@ -47,7 +47,7 @@ guess_url <- function(x, instance) {
     delib_jour <- format(delib_date, "%d")
     delib_mois_jour <- paste(delib_mois, delib_jour, sep = "-")
     index_delib <- ifelse(instance == "CCAS",str_remove(acte, "^[0-9]{6}"),str_remove(acte, "^[0-9]{4}_"))
-    index_delib <- ifelse(instance == "CCAS",str_remove(acte, "-.*$"),str_remove(acte, "[A-Z]{2}$"))
+    index_delib <- ifelse(instance == "CCAS",str_remove(index_delib, "-.*$"),str_remove(index_delib, "[A-Z]{2}$"))
     index_delib_num <- as.numeric(index_delib)
     first_index <- min(index_delib_num, na.rm = TRUE)
     # Les index des délibérations reprennent à 0 quand le numéro de délib
