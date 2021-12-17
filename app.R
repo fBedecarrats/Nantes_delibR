@@ -46,8 +46,8 @@ guess_url <- function(x, instance) {
     delib_mois <- format(delib_date, "%m")
     delib_jour <- format(delib_date, "%d")
     delib_mois_jour <- paste(delib_mois, delib_jour, sep = "-")
-    index_delib <- str_remove(acte, "^[0-9]{4}_")
-    index_delib <- str_remove(index_delib, "[A-Z]{2}$")
+    index_delib <- ifelse(instance == "CCAS",str_remove(acte, "^[0-9]{6}"),str_remove(acte, "^[0-9]{4}_"))
+    index_delib <- ifelse(instance == "CCAS",str_remove(index_delib, "-.*$"),str_remove(index_delib, "[A-Z]{2}$"))
     index_delib_num <- as.numeric(index_delib)
     first_index <- min(index_delib_num, na.rm = TRUE)
     # Les index des délibérations reprennent à 0 quand le numéro de délib
@@ -69,7 +69,7 @@ guess_url <- function(x, instance) {
     } else if (instance == "bureau-metropolitain") {
       doc_nom <- paste0(index_delib, "_", delib_an, delib_mois, 
                         delib_jour, "_BNM_DEL.pdf")
-    } else if (instance == "ca-ccas") {
+    } else if (instance == "CCAS") {
       doc_nom <- paste0(index_delib, "_", delib_an, delib_mois, 
                         delib_jour, "_CCAS_DEL.pdf")
     } else { # on n'a encore rien prévu pour le CCAS
@@ -95,7 +95,7 @@ guess_instance <- function(x) {
     str_detect(acte, "CM") ~ "conseil-municipal",
     str_detect(acte, "DC") ~ "conseil-metropolitain",
     str_detect(acte, "DB") ~ "bureau-metropolitain",
-    str_detect(acte, "DL") ~ "ca-ccas")
+    str_detect(acte, "DL") ~ "CCAS")
   instance <- tibble(instance) %>%
     count(instance) %>%
     arrange(desc(n)) %>%
