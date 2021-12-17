@@ -69,7 +69,7 @@ guess_url <- function(x, instance) {
     } else if (instance == "bureau-metropolitain") {
       doc_nom <- paste0(index_delib, "_", delib_an, delib_mois, 
                         delib_jour, "_BNM_DEL.pdf")
-    } else if (instance == "ca-ccas") {
+    } else if (instance == "CCAS") {
       doc_nom <- paste0(index_delib, "_", delib_an, delib_mois, 
                         delib_jour, "_CCAS_DEL.pdf")
     } else { # on n'a encore rien prévu pour le CCAS
@@ -95,7 +95,7 @@ guess_instance <- function(x) {
     str_detect(acte, "CM") ~ "conseil-municipal",
     str_detect(acte, "DC") ~ "conseil-metropolitain",
     str_detect(acte, "DB") ~ "bureau-metropolitain",
-    str_detect(acte, "DL") ~ "ca-ccas")
+    str_detect(acte, "DL") ~ "CCAS")
   instance <- tibble(instance) %>%
     count(instance) %>%
     arrange(desc(n)) %>%
