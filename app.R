@@ -261,6 +261,9 @@ server <- function(input, output) {
                         url_doss <- str_replace(url_test, "/documents/", "/D%C3%A9lib%C3%A9rations/")
                         url_doss <- str_replace(url_doss, "/assemblees/", "/delib/")
                         url_doss <-  str_replace(url_doss, ".pdf", ".PDF")
+                        url_doss2 <- str_replace(url_test, "/documents/", "/Deliberations/")
+                        url_doss2 <- str_replace(url_doss2, "/assemblees/", "/delib/")
+                        url_doss2 <-  str_replace(url_doss2, ".pdf", ".PDF")
                         # On teste les alternatives générées
                         if (gets_pdf(url_extmaj)) {
                           out$data$`URL de la délibération`[i] <- url_extmaj
@@ -285,6 +288,9 @@ server <- function(input, output) {
                           out$data$`URL OK`[i] = TRUE
                         } else if (gets_pdf(url_cmdel)) {
                           out$data$`URL de la délibération`[i] <- url_cmdel
+                          out$data$`URL OK`[i] = TRUE
+                        }else if (gets_pdf(url_doss2)) {
+                          out$data$`URL de la délibération`[i] <- url_doss2
                           out$data$`URL OK`[i] = TRUE
                         }else {
                           out$data$`URL de la délibération`[i] <- url_test
@@ -503,7 +509,8 @@ server <- function(input, output) {
         content = function(file) {
           out_table <- out$data %>%
             mutate(across(starts_with("Date"),
-                          ~ format(dmy(.x), "%d/%m/%Y"))) 
+                          ~ format(dmy(.x), "%d/%m/%Y")))
+            out_table <- rename(out_table, "Numéro de l'acte"=1,"Objet de l'acte"=2,"URL de la délibération"=3,"Date de décision"=5,"Code matière"=6,"Niveau 1 de la matière"=7,"Niveau 2 de la matière"=8,"Date de l'AR"=9,"Effectif théorique des votants"=10,"Effectif réel des votants (présents et représentés)"=11,"NPPV"=12,"Pour"=13,"Contre"=14,"Abstention"=15)
             write_excel_csv(out_table, file, na = "")
         }
     )
