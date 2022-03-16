@@ -40,15 +40,15 @@ if (Sys.info()["sysname"] == "Windows" &
 guess_url <- function(x, instance,ficname) {
   base_url <- "https://metropole.nantes.fr/files/live/sites/metropolenantesfr/files/assemblees/deliberations"
   docs  = "documents"
-  acte <- x$`Numéro de l'acte`
+  acte <- x[[1]]
   delib_date <- ymd(substr(ficname,1,8))
   delib_an <- year(delib_date)
   delib_mois <- format(delib_date, "%m")
   delib_jour <- format(delib_date, "%d")
   delib_mois_jour <- paste(delib_mois, delib_jour, sep = "-")
-if(instance == "CCAS"){  
-  index_delib <- str_remove(acte, "^[0-9]{6}")
-  index_delib <- str_remove(index_delib, "-.*$")}
+  if(instance == "CCAS"){  
+    index_delib <- str_remove(acte, "^[0-9]{6}")
+    index_delib <- str_remove(index_delib, "-.*$")}
   else {
     index_delib <- str_remove(acte, "^[0-9]{4}_")
     index_delib <- str_remove(index_delib, "[A-Z]{2}$")
@@ -96,7 +96,7 @@ gets_pdf <- function(x) {
 
 # Une fonction qui détermine l'instance dont il s'agit
 guess_instance <- function(x) {
-  acte <- x$`Numéro de l'acte`
+  acte <- x[[1]]
   instance <- case_when(
     str_detect(acte, "CM") ~ "conseil-municipal",
     str_detect(acte, "DC") ~ "conseil-metropolitain",
@@ -196,7 +196,7 @@ server <- function(input, output) {
   # On inclut un message d'accueil guidant l'utilisateur
   shinyalert(title = "Bienvenue",
              text = "Veuillez choisir un fichier FAST à enrichir
-               (format csv ou ods)",
+               (format csv ou ods).",
              type = "info", html = TRUE)
   
   observeEvent(input$ods_in, {
@@ -209,8 +209,8 @@ server <- function(input, output) {
     if (extension == ".ods") { # si .ods, charge avec la fonction adaptée
       df <- readODS::read_ods(fich_source$datapath[1])
       # On supprime les lignes de titre ou vides en début de certains .ods
-      if (str_starts(colnames(df)[1], "Numéro", negate = TRUE)) {
-        line_starts <- which.max(str_starts(df[,1], "Numéro"))
+      if (str_starts(colnames(df)[1], "Numéro|N°", negate = TRUE)) {
+        line_starts <- which.max(str_starts(df[,1], "Numéro|N°"))
         colnames(df) <- df[line_starts,]
         df <- df[(line_starts+1):nrow(df),]
       }
@@ -222,6 +222,10 @@ server <- function(input, output) {
                                locale = locale(encoding = "UTF-8"))
       }
     }
+    df[2]<-str_replace_all(df[[2]],c("Ã¢"="â","Ã»"="û","Ã¨"="è","&quot,"="'","Â "="","Ã "="à","Ã‰"="É","Ã¯"="ï","Ã©"="é","Ãš"="è","ÃŽ"="ô","Ã®"="î","Ãª"="ê"))
+    df[5]<-str_replace_all(df[[5]],c("Ã¢"="â","Ã»"="û","Ã¨"="è","&quot,"="'","Â "="","Ã "="à","Ã‰"="É","Ã¯"="ï","Ã©"="é","Ãš"="è","ÃŽ"="ô","Ã®"="î","Ãª"="ê"))
+    df[6]<-str_replace_all(df[[6]],c("Ã¢"="â","Ã»"="û","Ã¨"="è","&quot,"="'","Â "="","Ã "="à","Ã‰"="É","Ã¯"="ï","Ã©"="é","Ãš"="è","ÃŽ"="ô","Ã®"="î","Ãª"="ê"))
+    names(df) <- str_replace_all(names(df),"’","'")
     out$data <- df
     out$instance <- guess_instance(out$data)
     out$averif <- TRUE
@@ -242,7 +246,7 @@ server <- function(input, output) {
     withProgress(message = "Test et résolution des URL", value = 0, {
       n <- nrow(out$data)
       for (i in 1:n) {
-        acte <- out$data$`Numéro de l'acte`[i]
+        acte <- out$data[[1]][i]
         if (is.na(acte) | acte == "") {
           out$data$`URL OK`[i] <- NA
         } else {
@@ -369,7 +373,7 @@ server <- function(input, output) {
       withProgress(message = "Test des URL", value = 0, {
         n <- nrow(out$data)
         for (i in 1:n) {
-          if (is.na(out$data$`Numéro de l'acte`[i]) | out$data$`Numéro de l'acte`[i] == "") {
+          if (is.na(out$data[[1]][i]) | out$data[[1]][i] == "") {
             out$data$`URL OK`[i] <- NA
           } else {
             out$data$`URL OK`[i] = gets_pdf(out$data$`URL de la délibération`[i]) 
@@ -434,7 +438,7 @@ server <- function(input, output) {
       withProgress(message = "Extraction du texte", value = 0,
                    detail = paste0("Délibération 1/", n), {
                      for (i in 1:n) {
-                       if (is.na(out$data$`Numéro de l'acte`[i])) { next }
+                       if (is.na(out$data[[1]][i])) { next }
                        pdf <- out$data$`URL de la délibération`[i]
                        pdf_txt <- paste(pdf_text(pdf), collapse = "\n")
                        # Si le doc est déjà OCRisé, on récupère l'OCR déjà dispo
@@ -485,6 +489,7 @@ server <- function(input, output) {
       rendered <- DT::datatable(
         out$data %>%
           select(any_of(c(
+            "N° de l'acte",
             "Numéro de l'acte",
             "Objet de l'acte",
             "URL de la délibération",
