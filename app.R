@@ -198,7 +198,6 @@ server <- function(input, output) {
              text = "Veuillez choisir un fichier FAST à enrichir
                (format csv ou ods).",
              type = "info", html = TRUE)
-  
   observeEvent(input$ods_in, {
     fich_source <- input$ods_in #récupère le fichier source sélectionné
     req(fich_source) #s'assure que le fichier est valide
@@ -222,9 +221,9 @@ server <- function(input, output) {
                                locale = locale(encoding = "UTF-8"))
       }
     }
-    df[2]<-str_replace_all(df[[2]],c("Ã¢"="â","Ã»"="û","Ã¨"="è","&quot,"="'","Â "="","Ã "="à","Ã‰"="É","Ã¯"="ï","Ã©"="é","Ãš"="è","ÃŽ"="ô","Ã®"="î","Ãª"="ê"))
-    df[5]<-str_replace_all(df[[5]],c("Ã¢"="â","Ã»"="û","Ã¨"="è","&quot,"="'","Â "="","Ã "="à","Ã‰"="É","Ã¯"="ï","Ã©"="é","Ãš"="è","ÃŽ"="ô","Ã®"="î","Ãª"="ê"))
-    df[6]<-str_replace_all(df[[6]],c("Ã¢"="â","Ã»"="û","Ã¨"="è","&quot,"="'","Â "="","Ã "="à","Ã‰"="É","Ã¯"="ï","Ã©"="é","Ãš"="è","ÃŽ"="ô","Ã®"="î","Ãª"="ê"))
+    df[2]<-str_replace_all(df[[2]],c("Â²"="²","Ã¢"="â","Ã»"="û","Ã¨"="è","&quot,"="'","Â "="","Ã "="à","Ã‰"="É","Ã¯"="ï","Ã©"="é","Ãš"="è","ÃŽ"="ô","Ã®"="î","Ãª"="ê","Â "=""))
+    df[5]<-str_replace_all(df[[5]],c("Â²"="²","Ã¢"="â","Ã»"="û","Ã¨"="è","&quot,"="'","Â "="","Ã "="à","Ã‰"="É","Ã¯"="ï","Ã©"="é","Ãš"="è","ÃŽ"="ô","Ã®"="î","Ãª"="ê","Â "=""))
+    df[6]<-str_replace_all(df[[6]],c("Â²"="²","Ã¢"="â","Ã»"="û","Ã¨"="è","&quot,"="'","Â "="","Ã "="à","Ã‰"="É","Ã¯"="ï","Ã©"="é","Ãš"="è","ÃŽ"="ô","Ã®"="î","Ãª"="ê","Â "=""))
     names(df) <- str_replace_all(names(df),"’","'")
     out$data <- df
     out$instance <- guess_instance(out$data)
