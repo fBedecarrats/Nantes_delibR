@@ -41,6 +41,7 @@ guess_url <- function(x, instance,ficname) {
   base_url <- "https://metropole.nantes.fr/files/live/sites/metropolenantesfr/files/assemblees/deliberations"
   docs  = "documents"
   acte <- x[[1]]
+  voeu <- x[[13]]
   delib_date <- ymd(substr(ficname,1,8))
   delib_an <- year(delib_date)
   delib_mois <- format(delib_date, "%m")
@@ -53,18 +54,29 @@ guess_url <- function(x, instance,ficname) {
     index_delib <- str_remove(acte, "^[0-9]{4}_")
     index_delib <- str_remove(index_delib, "[A-Z]{2}$")
   }
-  
   index_delib_num <- as.numeric(index_delib)
   first_index <- min(index_delib_num, na.rm = TRUE)
   # Les index des délibérations reprennent à 0 quand le numéro de délib
   # suit le consécutif d'une session précédente
   if (first_index > 5) {
-    index_delib_num <- index_delib_num - (first_index - 1)
+    #Gestion des cas ou une délibération avec un "_b" est présente
+    count<-1
+    for(i in 1:length(voeu)) {
+      #Si on trouve une valeur dans la colonne voeu
+      if(!is.na(voeu[i])){
+        #On décale le compteur
+        count<-count-1
+      }
+      #Assignation des numéro de délibération
+      index_delib_num[i] <- index_delib_num[i] - (first_index - count)
+      index_delib[i] <- ifelse(index_delib_num[i] < 10, 
+                            paste0("0", index_delib_num[i]),
+                            as.character(index_delib_num[i]))
+      #Rajout d'un "_b" si présence de voeu
+      index_delib[i] <- if(!is.na(voeu[i])){paste0(index_delib[i],"b")}else{index_delib[i]}
+      }
     
-    
-    index_delib <- ifelse(index_delib_num < 10, 
-                          paste0("0", index_delib_num),
-                          as.character(index_delib_num))
+
   }
   # Les URL diffèrent selon les instances
   if (instance == "conseil-metropolitain") {
@@ -198,7 +210,6 @@ server <- function(input, output) {
              text = "Veuillez choisir un fichier FAST à enrichir
                (format csv ou ods).",
              type = "info", html = TRUE)
-  
   observeEvent(input$ods_in, {
     fich_source <- input$ods_in #récupère le fichier source sélectionné
     req(fich_source) #s'assure que le fichier est valide
@@ -222,9 +233,10 @@ server <- function(input, output) {
                                locale = locale(encoding = "UTF-8"))
       }
     }
-    df[2]<-str_replace_all(df[[2]],c("Ã¢"="â","Ã»"="û","Ã¨"="è","&quot,"="'","Â "="","Ã "="à","Ã‰"="É","Ã¯"="ï","Ã©"="é","Ãš"="è","ÃŽ"="ô","Ã®"="î","Ãª"="ê"))
-    df[5]<-str_replace_all(df[[5]],c("Ã¢"="â","Ã»"="û","Ã¨"="è","&quot,"="'","Â "="","Ã "="à","Ã‰"="É","Ã¯"="ï","Ã©"="é","Ãš"="è","ÃŽ"="ô","Ã®"="î","Ãª"="ê"))
-    df[6]<-str_replace_all(df[[6]],c("Ã¢"="â","Ã»"="û","Ã¨"="è","&quot,"="'","Â "="","Ã "="à","Ã‰"="É","Ã¯"="ï","Ã©"="é","Ãš"="è","ÃŽ"="ô","Ã®"="î","Ãª"="ê"))
+    chaine_replace <-c("Â²"="²","Ã¢"="â","Ã»"="û","Ã¨"="è","&quot,"="'","Â "="","Ã "="à","Ã‰"="É","Ã¯"="ï","Ã©"="é","Ãš"="è","ÃŽ"="ô","Ã®"="î","Ãª"="ê","Â "="","Ã "="à")
+    df[2]<-str_replace_all(df[[2]],chaine_replace)
+    df[5]<-str_replace_all(df[[5]],chaine_replace)
+    df[6]<-str_replace_all(df[[6]],chaine_replace)
     names(df) <- str_replace_all(names(df),"’","'")
     out$data <- df
     out$instance <- guess_instance(out$data)
@@ -521,7 +533,7 @@ server <- function(input, output) {
       out_table <- out$data %>%
         mutate(across(starts_with("Date"),
                       ~ format(dmy(.x), "%d/%m/%Y")))
-      out_table <- rename(out_table, "Numéro de l'acte"=1,"Objet de l'acte"=2,"URL de la délibération"=3,"Date de décision"=5,"Code matière"=6,"Niveau 1 de la matière"=7,"Niveau 2 de la matière"=8,"Date de l'AR"=9,"Effectif théorique des votants"=10,"Effectif réel des votants (présents et représentés)"=11,"NPPV"=12,"Pour"=13,"Contre"=14,"Abstention"=15)
+      out_table <- rename(out_table, "Numéro de l'acte"=1,"Objet de l'acte"=2,"URL de la délibération"=3,"Date de décision"=5,"Code matière"=6,"Niveau 1 de la matière"=7,"Niveau 2 de la matière"=8,"Date de l'AR"=9,"Effectif théorique des votants"=10,"Effectif réel des votants (présents et représentés)"=11,"Pour"=12,"Contre"=13,"Abstention"=14)
       write_excel_csv(out_table, file, na = "")
     }
   )
