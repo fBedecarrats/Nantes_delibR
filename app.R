@@ -41,7 +41,7 @@ guess_url <- function(x, instance,ficname) {
   base_url <- "https://metropole.nantes.fr/files/live/sites/metropolenantesfr/files/assemblees/deliberations"
   docs  = "documents"
   acte <- x[[1]]
-  voeu <- x[[13]]
+  voeu <- x[["Voeu intégré après l'ordre du jour"]]
   delib_date <- ymd(substr(ficname,1,8))
   delib_an <- year(delib_date)
   delib_mois <- format(delib_date, "%m")
