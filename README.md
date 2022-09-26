@@ -4,3 +4,4 @@ The application is developed in R Shiny.
 
 A demo instance is available at https://workbench.shinyapps.io/Nantes_delibR/ 
 Log in with user = "DémoDélibs" and password = "L'éléphant44" (without quotes).
+ 
