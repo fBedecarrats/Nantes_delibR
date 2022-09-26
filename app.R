@@ -78,7 +78,7 @@ guess_url <- function(x, instance,ficname) {
     
 
   }
-  # Les URL diffèrent selon les instances
+  # Les URL diffèrent selon les instances.
   if (instance == "conseil-metropolitain") {
     doc_nom <- paste0(index_delib, "_", delib_an, delib_mois, 
                       delib_jour, "_CNM_DEL.pdf")
