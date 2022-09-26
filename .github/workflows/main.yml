@@ -23,3 +23,7 @@ jobs:
           SHINY_SECRET: ${{ secrets.SHINYAPP_SECRET }}
           APP_NAME: 'Nantes_delibR'
           APP_DIR: ''
+      - name: Deploy
+        run: |
+          rsconnect::setAccountInfo(name='bacasable', token='${{ env.SHINYAPPS_TOKEN }}', secret='${{ secrets.SHINYAPPS_SECRET }}')
+          rsconnect::deployApp()
