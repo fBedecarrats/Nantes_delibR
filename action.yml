@@ -6,8 +6,8 @@ steps:
     name: Deploy to shinyapps.io
     uses: workbench/shinyapps-actions@main
     env:
-        SHINY_USERNAME: 'workbench'
+        SHINY_USERNAME: 'bacasable'
         SHINY_TOKEN: ${{ secrets.SHINYAPP_TOKEN }}
         SHINY_SECRET: ${{ secrets.SHINYAPP_SECRET }}
-        APP_NAME: 'Nantes_delibR2'
+        APP_NAME: 'Nantes_delibR'
         APP_DIR: ''
