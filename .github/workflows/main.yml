@@ -16,9 +16,7 @@ jobs:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
-      - id: deploy
         name: Deploy to shinyapps.io
-        uses: bacasable/shinyapps-actions@main
         env:
           SHINY_USERNAME: 'bacasable'
           SHINY_TOKEN: ${{ secrets.SHINYAPP_TOKEN }}
