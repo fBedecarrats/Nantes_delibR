@@ -1,0 +1,22 @@
+name: Deploy to shinyapps.io
+on:
+
+  # run on any push 
+  push:
+      
+jobs:
+  deploy:
+    name: Deploy to shinyapps
+    env:
+          SHINY_USERNAME: 'bacasable'
+          SHINY_TOKEN: ${{ secrets.SHINYAPP_TOKEN }}
+          SHINY_SECRET: ${{ secrets.SHINYAPP_SECRET }}
+          APP_NAME: 'Nantes_delibR'
+          APP_DIR: ''
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Send to shinyapps
+        run: |
+          rsconnect::setAccountInfo(name='bacasable', token='${{ env.SHINYAPPS_TOKEN }}', secret='${{ secrets.SHINYAPPS_SECRET }}')
+          rsconnect::deployApp()

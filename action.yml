@@ -1,13 +1,13 @@
 steps:
-  - uses: actions/checkout@v2
+  - uses: actions/checkout@v3
     with:
         fetch-depth: 0
   - id: deploy
     name: Deploy to shinyapps.io
-    uses: workbench/shinyapps-actions@main
+    uses: bacasable/shinyapps-actions@main
     env:
-        SHINY_USERNAME: 'workbench'
+        SHINY_USERNAME: 'bacasable'
         SHINY_TOKEN: ${{ secrets.SHINYAPP_TOKEN }}
         SHINY_SECRET: ${{ secrets.SHINYAPP_SECRET }}
-        APP_NAME: 'Nantes_delibR2'
+        APP_NAME: 'Nantes_delibR'
         APP_DIR: ''
