@@ -237,7 +237,7 @@ server <- function(input, output) {
     df[2]<-str_replace_all(df[[2]],chaine_replace)
     df[5]<-str_replace_all(df[[5]],chaine_replace)
     df[6]<-str_replace_all(df[[6]],chaine_replace)
-    names(df) <- R.utils::capitalize(str_replace_all(names(df),c("œ"="oe","’"="'")))
+    names(df) <- trimws(R.utils::capitalize(str_replace_all(names(df),c("œ"="oe","’"="'"))))
     out$data <- df
     out$instance <- guess_instance(out$data)
     out$averif <- TRUE
