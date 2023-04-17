@@ -195,11 +195,11 @@ ui <- fluidPage(
 )
 
 # Serveur de l'application
-server <- function(input, output) {
+#server <- function(input, output) {
   # Authentification pour l'accès à l'application
-  res_auth <- secure_server(check_credentials = check_credentials(credentials),
-                            timeout = 0)
-  output$auth_output <- renderPrint({ reactiveValuesToList(res_auth) })
+ # res_auth <- secure_server(check_credentials = check_credentials(credentials),
+                        #    timeout = 0)
+ # output$auth_output <- renderPrint({ reactiveValuesToList(res_auth) })
   # On initie un tableau réactif qui permettra d'éditer les données aux 
   # différentes étapes
   out <- reactiveValues(data = NULL)
